@@ -5,23 +5,22 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using FinalProjectService.Models;
+using MongoDB.Bson;
 
 namespace FinalProjectService.Controllers
 {
     public class ProductController : ApiController
     {
-        // GET api/<controller>
         public IEnumerable<Product> Get()
         {
             return Product.ReadAll();
         }
 
-        // GET api/<controller>/5
-        [Route("api/product/{productName}")]
-        public Product Get(string productName)
+        [Route("api/product/{productId}")]
+        public Product Get(string productId)
         {
-            var productFound = Product.Read(productName);
-            if (productName != null)
+            var productFound = Product.Read(ObjectId.Parse(productId));
+            if (productFound != null)
             {
                 return productFound;
             }
@@ -31,28 +30,20 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        // POST api/<controller>
-        public Product Post([FromBody] Product value)
+        public Product Post([FromBody] Product product)
         {
-            if (Product.Read(value.Name) == null)
-            {
-                return Product.Create(value);
-            }
-            else
-            {
-                throw new HttpResponseException(HttpStatusCode.Conflict);
-            }
+            return Product.Create(product);
         }
 
-        // PUT api/<controller>/5
-        [Route("api/product/{productName}")]
-        public Product Put(string productName, [FromBody] Product product)
+        [Route("api/product/{productId}")]
+        public Product Put(string productId, [FromBody] Product product)
         {
-            var productFound = Product.Read(productName);
+            var id = ObjectId.Parse(productId);
+            var productFound = Product.Read(id);
 
             if (productFound != null)
             {
-                return productFound.Update(product);
+                return Product.Update(id, product);
             }
             else
             {
@@ -60,14 +51,14 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        // DELETE api/<controller>/5
-        [Route("api/product/{productName}")]
-        public void Delete(HttpRequestMessage request, string productName)
+        [Route("api/product/{productId}")]
+        public void Delete(string productId)
         {
-            var productFound = Product.Read(productName);
+            var id = ObjectId.Parse(productId);
+            var productFound = Product.Read(id);
             if (productFound != null)
             {
-                productFound.Delete();
+                Product.Delete(id);
             }
             else
             {

@@ -18,11 +18,21 @@ namespace FinalProjectService.Models
         int Stock { get; set; }
     }
 
-    [BsonIgnoreExtraElements]
+    public class ProductRequest : IProduct
+    {
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public string Description { get; set; }
+        public int Stock { get; set; }
+    }
+
     public class Product : RealmObject, IProduct
     {
-        public static readonly string collection = "product";
+        private static IMongoCollection<Product> collection = DbHandler.GetCollection<Product>("product");
+
         [PrimaryKey]
+        public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+
         [Indexed]
         public string Name
         {
@@ -32,7 +42,6 @@ namespace FinalProjectService.Models
         {
             get; set;
         }
-        [Required]
         public string Description
         {
             get; set;
@@ -42,36 +51,32 @@ namespace FinalProjectService.Models
             get; set;
         }
 
-        public static Product Create(IProduct product)
+        public Product(IProduct product)
         {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-
-            mongoCollection.InsertOne(new Product()
-            {
-                Name = product.Name,
-                Description = product.Description,
-                Stock = product.Stock,
-                Price = product.Price
-            });
-
-            return Read(product.Name);
+            this.Name = product.Name;
+            this.Description = product.Description;
+            this.Stock = product.Stock;
+            this.Price = product.Price;
         }
 
-        public static Product Read(string productName)
+        public Product() { }
+
+        public static Product Create(IProduct product)
         {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-            var filter = Builders<Product>.Filter.Eq("Name", productName);
-            var documentFound = mongoCollection.Find(filter).FirstOrDefault();
+            var productToCreate = new Product(product);
+            collection.InsertOne(productToCreate);
+
+            return Read(productToCreate.Id);
+        }
+
+        public static Product Read(ObjectId id)
+        {
+            var filter = Builders<Product>.Filter.Eq("Id", id);
+            var documentFound = collection.Find(filter).FirstOrDefault();
 
             if (documentFound != null)
             {
-                return new Product()
-                {
-                    Name = documentFound.Name,
-                    Description = documentFound.Description,
-                    Price = documentFound.Price,
-                    Stock = documentFound.Stock
-                };
+                return documentFound;
             }
             else
             {
@@ -81,24 +86,14 @@ namespace FinalProjectService.Models
 
         public static IEnumerable<Product> ReadAll()
         {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-
-            return mongoCollection.Find(_ => true).ToList().ToArray()
-                .Select(el => new Product()
-                {
-                    Name = el.Name,
-                    Description = el.Description,
-                    Stock = el.Stock,
-                    Price = el.Price
-                });
+            return collection.Find(_ => true).ToList().ToArray();
         }
 
-        public Product Update(IProduct product)
+        public static Product Update(ObjectId id, IProduct product)
         {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-            var filter = Builders<Product>.Filter.Eq("Name", this.Name);
+            var filter = Builders<Product>.Filter.Eq("Id", id);
             var updateDefinition = Builders<Product>.Update.Set(rec => rec.Description, product.Description);
-            var productFound = mongoCollection.FindOneAndUpdate<Product>(filter, updateDefinition, new FindOneAndUpdateOptions<Product>
+            var productFound = collection.FindOneAndUpdate(filter, updateDefinition, new FindOneAndUpdateOptions<Product>
             {
                 ReturnDocument = ReturnDocument.After
             });
@@ -113,11 +108,10 @@ namespace FinalProjectService.Models
             }
         }
 
-        public void Delete()
+        public static void Delete(ObjectId id)
         {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-            var filter = Builders<Product>.Filter.Eq("Name", this.Name);
-            mongoCollection.FindOneAndDelete<Product>(filter);
+            var filter = Builders<Product>.Filter.Eq("Id", id);
+            collection.FindOneAndDelete<Product>(filter);
         }
     }
 }
