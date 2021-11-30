@@ -1,12 +1,11 @@
 ﻿using FinalProjectService.Classes;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Realms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace FinalProjectService.Models
 {
@@ -28,7 +27,8 @@ namespace FinalProjectService.Models
 
     public class Product : RealmObject, IProduct
     {
-        private static IMongoCollection<Product> collection = DbHandler.GetCollection<Product>("product");
+        private static readonly IMongoCollection<Product> collection = DbHandler.GetCollection<Product>("product");
+        private static readonly Func<ObjectId, FilterDefinition<Product>> filterById = (ObjectId id) => Builders<Product>.Filter.Eq("Id", id);
 
         [PrimaryKey]
         public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
@@ -61,18 +61,17 @@ namespace FinalProjectService.Models
 
         public Product() { }
 
-        public static Product Create(IProduct product)
+        public static async Task<Product> CreateAsync(IProduct product)
         {
             var productToCreate = new Product(product);
-            collection.InsertOne(productToCreate);
+            await collection.InsertOneAsync(productToCreate);
 
-            return Read(productToCreate.Id);
+            return await ReadAsync(productToCreate.Id);
         }
 
-        public static Product Read(ObjectId id)
+        public static async Task<Product> ReadAsync(ObjectId id)
         {
-            var filter = Builders<Product>.Filter.Eq("Id", id);
-            var documentFound = collection.Find(filter).FirstOrDefault();
+            var documentFound = (await collection.FindAsync(filterById(id))).FirstOrDefault();
 
             if (documentFound != null)
             {
@@ -84,16 +83,18 @@ namespace FinalProjectService.Models
             }
         }
 
-        public static IEnumerable<Product> ReadAll()
+        public static async Task<IEnumerable<Product>> ReadAllAsync()
         {
-            return collection.Find(_ => true).ToList().ToArray();
+            return (await collection.FindAsync(_ => true)).ToList();
         }
 
-        public static Product Update(ObjectId id, IProduct product)
+        public static async Task<Product> UpdateAsync(ObjectId id, IProduct product)
         {
-            var filter = Builders<Product>.Filter.Eq("Id", id);
-            var updateDefinition = Builders<Product>.Update.Set(rec => rec.Description, product.Description);
-            var productFound = collection.FindOneAndUpdate(filter, updateDefinition, new FindOneAndUpdateOptions<Product>
+            var updateDefinition = Builders<Product>.Update.Set(rec => rec.Description, product.Description)
+                .Set(rec => rec.Name, product.Name)
+                .Set(rec => rec.Stock, product.Stock)
+                .Set(rec => rec.Price, product.Price);
+            var productFound = await collection.FindOneAndUpdateAsync(filterById(id), updateDefinition, new FindOneAndUpdateOptions<Product>
             {
                 ReturnDocument = ReturnDocument.After
             });
@@ -108,10 +109,9 @@ namespace FinalProjectService.Models
             }
         }
 
-        public static void Delete(ObjectId id)
+        public static async Task DeleteAsync(ObjectId id)
         {
-            var filter = Builders<Product>.Filter.Eq("Id", id);
-            collection.FindOneAndDelete<Product>(filter);
+            await collection.FindOneAndDeleteAsync<Product>(filterById(id));
         }
     }
 }
