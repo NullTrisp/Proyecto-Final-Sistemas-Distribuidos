@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using FinalProjectService.Classes;
 using FinalProjectService.Models;
 using MongoDB.Bson;
 
@@ -16,13 +17,17 @@ namespace FinalProjectService.Controllers
     {
         public async Task<IEnumerable<Product>> Get()
         {
-            return await Product.ReadAllAsync();
+            var crud = new CrudHandler();
+
+            return await crud.ReadAllAsync<Product>("product");
         }
 
         [Route("api/product/{productId}")]
         public async Task<Product> Get(string productId)
         {
-            var productFound = await Product.ReadAsync(ObjectId.Parse(productId));
+            var crud = new CrudHandler();
+
+            var productFound = await crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
             if (productFound != null)
             {
                 return productFound;
@@ -33,20 +38,22 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        public async Task<Product> Post([FromBody] Product product)
+        public async Task Post([FromBody] ProductRequest product)
         {
-            return await Product.CreateAsync(product);
+            var crud = new CrudHandler();
+
+            await crud.CreateAsync("product", new Product(product));
         }
 
         [Route("api/product/{productId}")]
-        public async Task<Product> Put(string productId, [FromBody] Product product)
+        public async Task Put(string productId, [FromBody] ProductRequest product)
         {
-            var id = ObjectId.Parse(productId);
-            var productFound = await Product.ReadAsync(id);
+            var crud = new ProductHandler();
+            var productFound = await crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
 
             if (productFound != null)
             {
-                return await Product.UpdateAsync(id, product);
+                await crud.UpdateAsync(productFound.Id, new Product(product));
             }
             else
             {
@@ -55,13 +62,18 @@ namespace FinalProjectService.Controllers
         }
 
         [Route("api/product/{productId}")]
-        public async void Delete(string productId)
+        public async Task Delete(string productId)
         {
-            var id = ObjectId.Parse(productId);
-            var productFound = await Product.ReadAsync(id);
+            var crud = new UserHandler();
+
+            var productFound = await crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
             if (productFound != null)
             {
-                await Product.DeleteAsync(id);
+                await crud.DeleteAsync<Product>("product", productFound.Id);
+                var users = await crud.ReadAllAsync<User>("user");
+
+                var tasks = users.Where(user => user.Cart.Contains(productFound.Id)).Select(user => crud.RemoveProductToCartAsync(user, productFound));
+                await Task.WhenAll(tasks);
             }
             else
             {

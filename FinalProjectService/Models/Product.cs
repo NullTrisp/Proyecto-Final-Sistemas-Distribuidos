@@ -1,11 +1,8 @@
-﻿using FinalProjectService.Classes;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Realms;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FinalProjectService.Models
 {
@@ -25,12 +22,9 @@ namespace FinalProjectService.Models
         public int Stock { get; set; }
     }
 
-    public class Product : RealmObject, IProduct
+    public class Product : IProduct
     {
-        private static readonly IMongoCollection<Product> collection = DbHandler.GetCollection<Product>("product");
-        private static readonly Func<ObjectId, FilterDefinition<Product>> filterById = (ObjectId id) => Builders<Product>.Filter.Eq("Id", id);
-
-        [PrimaryKey]
+        [BsonId]
         public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
 
         [Indexed]
@@ -57,61 +51,6 @@ namespace FinalProjectService.Models
             this.Description = product.Description;
             this.Stock = product.Stock;
             this.Price = product.Price;
-        }
-
-        public Product() { }
-
-        public static async Task<Product> CreateAsync(IProduct product)
-        {
-            var productToCreate = new Product(product);
-            await collection.InsertOneAsync(productToCreate);
-
-            return await ReadAsync(productToCreate.Id);
-        }
-
-        public static async Task<Product> ReadAsync(ObjectId id)
-        {
-            var documentFound = (await collection.FindAsync(filterById(id))).FirstOrDefault();
-
-            if (documentFound != null)
-            {
-                return documentFound;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static async Task<IEnumerable<Product>> ReadAllAsync()
-        {
-            return (await collection.FindAsync(_ => true)).ToList();
-        }
-
-        public static async Task<Product> UpdateAsync(ObjectId id, IProduct product)
-        {
-            var updateDefinition = Builders<Product>.Update.Set(rec => rec.Description, product.Description)
-                .Set(rec => rec.Name, product.Name)
-                .Set(rec => rec.Stock, product.Stock)
-                .Set(rec => rec.Price, product.Price);
-            var productFound = await collection.FindOneAndUpdateAsync(filterById(id), updateDefinition, new FindOneAndUpdateOptions<Product>
-            {
-                ReturnDocument = ReturnDocument.After
-            });
-
-            if (productFound != null)
-            {
-                return productFound;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static async Task DeleteAsync(ObjectId id)
-        {
-            await collection.FindOneAndDeleteAsync<Product>(filterById(id));
         }
     }
 }

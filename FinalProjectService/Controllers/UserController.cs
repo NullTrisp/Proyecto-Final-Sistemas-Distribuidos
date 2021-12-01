@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using FinalProjectService.Classes;
 using FinalProjectService.Models;
 using MongoDB.Bson;
 
@@ -16,13 +14,15 @@ namespace FinalProjectService.Controllers
     {
         public async Task<IEnumerable<User>> Get()
         {
-            return await Models.User.ReadAllAsync();
+            var crud = new CrudHandler();
+            return await crud.ReadAllAsync<User>("user");
         }
 
-        [Route("api/user/{username}")]
-        public async Task<User> Get(string username)
+        [Route("api/user/{id}")]
+        public async Task<User> Get(string id)
         {
-            var user = await Models.User.ReadAsync(username);
+            var crud = new UserHandler();
+            var user = await crud.ReadAsync<User>("user", ObjectId.Parse(id));
             if (user != null)
             {
                 return user;
@@ -33,11 +33,13 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        public async Task<User> Post([FromBody] UserRequest user)
+        public async Task Post([FromBody] UserRequest user)
         {
+            var crud = new UserHandler();
+
             try
             {
-                return await Models.User.CreateAsync(user);
+                await crud.CreateAsync(new User(user));
             }
             catch (UserAlreadyExistsException)
             {
@@ -45,31 +47,35 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        [Route("api/user/{username}")]
-        public async void Put(string username, [FromBody] UserRequest req)
+        [Route("api/user/{id}")]
+        public async Task Put(string id, [FromBody] UserRequest req)
         {
-            await Models.User.UpdateAsync(username, req.Password);
+            var crud = new UserHandler();
+            await crud.UpdateAsync(ObjectId.Parse(id), new User(req));
         }
 
-        [Route("api/user/{username}")]
-        public async Task Delete(string username)
+        [Route("api/user/{id}")]
+        public async Task Delete(string id)
         {
-            await Models.User.DeleteAsync(username);
+            var crud = new UserHandler();
+            await crud.DeleteAsync<User>("user", ObjectId.Parse(id));
         }
 
         [HttpPost]
-        [Route("api/user/{username}/cart/product/{productId}")]
-        public async Task AddProductToCartAsync(string username, string productId)
+        [Route("api/user/{userId}/cart/product/{productId}")]
+        public async Task AddProductToCartAsync(string userId, string productId)
         {
-            var user = Models.User.ReadAsync(username);
-            var product = Product.ReadAsync(ObjectId.Parse(productId));
+            var crud = new UserHandler();
+
+            var user = crud.ReadAsync<User>("user", ObjectId.Parse(userId));
+            var product = crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
 
             var userFound = await user;
             var productFound = await product;
 
             if (userFound != null && productFound != null)
             {
-                await Models.User.AddProductToCartAsync(userFound, productFound);
+                await crud.AddProductToCartAsync(userFound, productFound);
             }
             else
             {
@@ -79,24 +85,25 @@ namespace FinalProjectService.Controllers
         }
 
         [HttpDelete]
-        [Route("api/user/{username}/cart/product/{productId}")]
-        public async Task Delete(string username, string productId)
+        [Route("api/user/{userId}/cart/product/{productId}")]
+        public async Task Delete(string userId, string productId)
         {
-            var user = Models.User.ReadAsync(username);
-            var product = Product.ReadAsync(ObjectId.Parse(productId));
+            var crud = new UserHandler();
+
+            var user = crud.ReadAsync<User>("user", ObjectId.Parse(userId));
+            var product = crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
 
             var userFound = await user;
             var productFound = await product;
 
             if (userFound != null && productFound != null)
             {
-                await Models.User.RemoveProductToCartAsync(userFound, productFound);
+                await crud.RemoveProductToCartAsync(userFound, productFound);
             }
             else
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             }
-
         }
     }
 }
