@@ -1,11 +1,7 @@
 ﻿using FinalProjectService.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace FinalProjectService.Classes
 {
@@ -23,7 +19,8 @@ namespace FinalProjectService.Classes
             var updateDefinition = Builders<Product>.Update.Set(rec => rec.Description, record.Description)
                 .Set(rec => rec.Name, record.Name)
                 .Set(rec => rec.Stock, record.Stock)
-                .Set(rec => rec.Price, record.Price);
+                .Set(rec => rec.Price, record.Price)
+                .Set(rec => rec.Image, record.Image);
 
             await collection.FindOneAndUpdateAsync(filter(await ReadAsync<Product>("product", id)), updateDefinition);
         }

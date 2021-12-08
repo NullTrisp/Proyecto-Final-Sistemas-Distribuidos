@@ -1,8 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
-using Realms;
-using System;
 
 namespace FinalProjectService.Models
 {
@@ -27,7 +24,6 @@ namespace FinalProjectService.Models
         [BsonId]
         public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
 
-        [Indexed]
         public string Name
         {
             get; set;
@@ -45,6 +41,7 @@ namespace FinalProjectService.Models
             get; set;
         }
 
+        public string Image { get; set; } = "";
         public Product(IProduct product)
         {
             this.Name = product.Name;
