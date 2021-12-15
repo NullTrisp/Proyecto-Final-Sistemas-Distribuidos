@@ -9,6 +9,8 @@ namespace FinalProjectService.Models
         decimal Price { get; set; }
         string Description { get; set; }
         int Stock { get; set; }
+
+        ObjectId UserId { get; set; }
     }
 
     public class ProductRequest : IProduct
@@ -17,6 +19,8 @@ namespace FinalProjectService.Models
         public decimal Price { get; set; }
         public string Description { get; set; }
         public int Stock { get; set; }
+        public ObjectId UserId { get; set; }
+
     }
 
     public class Product : IProduct
@@ -41,6 +45,8 @@ namespace FinalProjectService.Models
             get; set;
         }
 
+        public ObjectId UserId { get; set; }
+
         public string Image { get; set; } = "";
         public Product(IProduct product)
         {
@@ -48,6 +54,7 @@ namespace FinalProjectService.Models
             this.Description = product.Description;
             this.Stock = product.Stock;
             this.Price = product.Price;
+            this.UserId = product.UserId;
         }
     }
 }

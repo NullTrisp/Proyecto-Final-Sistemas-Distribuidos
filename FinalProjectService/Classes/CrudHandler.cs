@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ namespace FinalProjectService.Classes
 
         public CrudHandler()
         {
-            var client = new MongoClient($"mongodb://localhost:27017");
+            var client = new MongoClient(ConfigurationManager.ConnectionStrings["myConnectionString"].ConnectionString);
             this.db = client.GetDatabase("amazon");
         }
 

@@ -36,9 +36,12 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        public async Task Post([FromBody] ProductRequest product)
+
+        [Route("api/product/user/{userId}")]
+        public async Task Post(string userId, [FromBody] ProductRequest product)
         {
             var crud = new CrudHandler();
+            product.UserId = ObjectId.Parse(userId);
 
             await crud.CreateAsync("product", new Product(product));
         }
