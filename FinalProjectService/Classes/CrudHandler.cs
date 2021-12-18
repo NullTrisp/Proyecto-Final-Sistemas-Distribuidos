@@ -26,7 +26,7 @@ namespace FinalProjectService.Classes
         public async Task<T> ReadAsync<T>(string collectionName, ObjectId id)
         {
             var collection = this.db.GetCollection<T>(collectionName);
-            var filter = Builders<T>.Filter.Eq("Id", id);
+            var filter = Builders<T>.Filter.Eq("id", id);
             return (await collection.FindAsync<T>(filter)).FirstOrDefault();
         }
 
@@ -40,7 +40,7 @@ namespace FinalProjectService.Classes
         public async Task DeleteAsync<T>(string collectionName, ObjectId id)
         {
             var collection = this.db.GetCollection<T>(collectionName);
-            var filter = Builders<T>.Filter.Eq("Id", id);
+            var filter = Builders<T>.Filter.Eq("id", id);
 
             await collection.FindOneAndDeleteAsync<T>(filter);
         }

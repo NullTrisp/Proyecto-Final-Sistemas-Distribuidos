@@ -33,7 +33,7 @@ namespace FinalProjectService.Controllers
             }
         }
 
-        public async Task Post([FromBody] UserRequest user)
+        public async Task Post([FromBody] UserCreationRequest user)
         {
             var crud = new UserHandler();
 
@@ -47,8 +47,24 @@ namespace FinalProjectService.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("api/user/login")]
+        public async Task<User> Login([FromBody] UserCredentials user)
+        {
+            var crud = new UserHandler();
+
+            try
+            {
+                return await crud.Authentificate(user);
+            }
+            catch (UserAlreadyExistsException)
+            {
+                throw new HttpResponseException(HttpStatusCode.Conflict);
+            }
+        }
+
         [Route("api/user/{id}")]
-        public async Task Put(string id, [FromBody] UserRequest req)
+        public async Task Put(string id, [FromBody] UserCredentials req)
         {
             var crud = new UserHandler();
             await crud.UpdateAsync(ObjectId.Parse(id), new User(req));
@@ -63,7 +79,7 @@ namespace FinalProjectService.Controllers
 
         [HttpPost]
         [Route("api/user/{userId}/cart/product/{productId}")]
-        public async Task AddProductToCartAsync(string userId, string productId)
+        public async Task<User> AddProductToCartAsync(string userId, string productId)
         {
             var crud = new UserHandler();
 
@@ -75,7 +91,7 @@ namespace FinalProjectService.Controllers
 
             if (userFound != null && productFound != null)
             {
-                await crud.AddProductToCartAsync(userFound, productFound);
+                return await crud.AddProductToCartAsync(userFound, productFound);
             }
             else
             {
@@ -86,7 +102,7 @@ namespace FinalProjectService.Controllers
 
         [HttpDelete]
         [Route("api/user/{userId}/cart/product/{productId}")]
-        public async Task Delete(string userId, string productId)
+        public async Task<User> Delete(string userId, string productId)
         {
             var crud = new UserHandler();
 
@@ -98,7 +114,7 @@ namespace FinalProjectService.Controllers
 
             if (userFound != null && productFound != null)
             {
-                await crud.RemoveProductToCartAsync(userFound, productFound);
+                return await crud.RemoveProductFromCartAsync(userFound, productFound);
             }
             else
             {

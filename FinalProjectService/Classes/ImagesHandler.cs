@@ -21,14 +21,14 @@ namespace FinalProjectService.Classes
             return await cloudinary.UploadAsync(new ImageUploadParams()
             {
                 File = new FileDescription(fileName, file),
-                PublicId = product.Id.ToString()
+                PublicId = product.id.ToString()
             });
         }
 
         public static async Task DeleteProductImageAsync(Product product)
         {
             cloudinary.Api.Secure = true;
-            await cloudinary.DeleteResourcesAsync(new string[] { product.Id.ToString() });
+            await cloudinary.DeleteResourcesAsync(new string[] { product.id.ToString() });
         }
 
     }

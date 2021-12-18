@@ -12,11 +12,13 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace FinalProjectService.Controllers
 {
     public class ImagesController : ApiController
     {
+        [EnableCors(origins: "*", headers: "*", methods: "*")]
         // POST api/<controller>
         [Route("api/images/{productId}")]
         public async Task PostAsync(string productId)
@@ -38,14 +40,14 @@ namespace FinalProjectService.Controllers
 
                 if (productFound != null)
                 {
-                    if (!productFound.Image.Equals(""))
+                    if (!productFound.image.Equals(""))
                     {
                         await ImagesHandler.DeleteProductImageAsync(productFound);
                     }
                     var postedFile = request.Files[0];
                     var imageUploaded = await ImagesHandler.UploadProductImageAsync(postedFile.FileName, postedFile.InputStream, productFound);
 
-                    productFound.Image = imageUploaded.SecureUrl.ToString();
+                    productFound.image = imageUploaded.SecureUrl.ToString();
                     await productHandler.UpdateAsync(productObjectId, productFound);
                 }
                 else
@@ -68,7 +70,7 @@ namespace FinalProjectService.Controllers
 
             if (productFound != null)
             {
-                productFound.Image = "";
+                productFound.image = "";
                 await productHandler.UpdateAsync(productObjectId, productFound);
                 await ImagesHandler.DeleteProductImageAsync(productFound);
             }

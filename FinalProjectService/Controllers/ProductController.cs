@@ -38,12 +38,12 @@ namespace FinalProjectService.Controllers
 
 
         [Route("api/product/user/{userId}")]
-        public async Task Post(string userId, [FromBody] ProductRequest product)
+        public async Task<string> Post(string userId, [FromBody] ProductRequest product)
         {
-            var crud = new CrudHandler();
-            product.UserId = ObjectId.Parse(userId);
+            var crud = new ProductHandler();
+            product.userId = ObjectId.Parse(userId);
 
-            await crud.CreateAsync("product", new Product(product));
+            return await crud.CreateAsync(new Product(product));    
         }
 
         [Route("api/product/{productId}")]
@@ -54,7 +54,7 @@ namespace FinalProjectService.Controllers
 
             if (productFound != null)
             {
-                await crud.UpdateAsync(productFound.Id, new Product(product));
+                await crud.UpdateAsync(productFound.id, new Product(product));
             }
             else
             {
@@ -70,10 +70,10 @@ namespace FinalProjectService.Controllers
             var productFound = await crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
             if (productFound != null)
             {
-                await crud.DeleteAsync<Product>("product", productFound.Id);
+                await crud.DeleteAsync<Product>("product", productFound.id);
                 var users = await crud.ReadAllAsync<User>("user");
 
-                var tasks = users.Where(user => user.Cart.Contains(productFound.Id)).Select(user => crud.RemoveProductToCartAsync(user, productFound));
+                var tasks = users.Where(user => user.cart.Contains(productFound.id)).Select(user => crud.RemoveProductFromCartAsync(user, productFound));
                 await Task.WhenAll(tasks);
             }
             else

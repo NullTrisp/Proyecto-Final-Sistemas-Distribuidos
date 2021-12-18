@@ -6,42 +6,76 @@ namespace FinalProjectService.Models
 {
     public interface IUser
     {
-        string Username
+        string username
         {
             get; set;
         }
 
-        string Password
+        string password
+        {
+            get; set;
+        }
+
+        string email
         {
             get; set;
         }
     }
 
-    public class UserRequest : IUser
+    public class UserCredentials
     {
-        public string Username { get; set; }
+        public string username
+        {
+            get; set;
+        }
 
-        public string Password { get; set; }
+        public string password
+        {
+            get; set;
+        }
+    }
+
+    public class UserCreationRequest : IUser
+    {
+        public string username { get; set; }
+
+        public string password { get; set; }
+
+        public string email { get; set; }
     }
 
     public class User : IUser
     {
         [BsonId]
-        public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
+        public ObjectId id { get; set; } = ObjectId.GenerateNewId();
 
-        public string Username { get; set; }
+        public string username { get; set; }
 
-        public string Password { get; set; }
+        public string password { get; set; }
 
-        public List<ObjectId> Cart
+        public string email { get; set; }
+
+        public List<ObjectId> cart
+        {
+            get; set;
+        } = new List<ObjectId>();
+
+        public List<ObjectId> products
         {
             get; set;
         } = new List<ObjectId>();
 
         public User(IUser user)
         {
-            this.Username = user.Username;
-            this.Password = user.Password;
+            this.username = user.username;
+            this.password = user.password;
+            this.email = user.email;
+        }
+        public User(UserCredentials credentials)
+        {
+            this.username = credentials.username;
+            this.password = credentials.password;
+            this.email = "";
         }
     }
 }
