@@ -60,11 +60,6 @@ namespace FinalProjectService.Models
             get; set;
         } = new List<ObjectId>();
 
-        public List<ObjectId> products
-        {
-            get; set;
-        } = new List<ObjectId>();
-
         public User(IUser user)
         {
             this.username = user.username;

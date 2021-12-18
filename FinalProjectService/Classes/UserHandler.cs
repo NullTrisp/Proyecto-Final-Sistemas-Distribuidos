@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FinalProjectService.Models;
@@ -82,6 +83,15 @@ namespace FinalProjectService.Classes
 
             FilterDefinition<User> filter(User userToFind) => Builders<User>.Filter.Eq("id", userToFind.id);
             var updateDefinition = Builders<User>.Update.Pull("cart", product.id);
+            await collection.FindOneAndUpdateAsync(filter(user), updateDefinition);
+            return (await collection.FindAsync<User>(filter(user))).FirstOrDefault();
+        }
+
+        public async Task<User> PurchaseAllItemsInCart(User user)
+        {
+            var collection = db.GetCollection<User>("user");
+            FilterDefinition<User> filter(User userToFind) => Builders<User>.Filter.Eq("id", userToFind.id);
+            var updateDefinition = Builders<User>.Update.Set("cart", new List<ObjectId>());
             await collection.FindOneAndUpdateAsync(filter(user), updateDefinition);
             return (await collection.FindAsync<User>(filter(user))).FirstOrDefault();
         }

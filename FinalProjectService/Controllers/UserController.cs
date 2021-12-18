@@ -102,7 +102,7 @@ namespace FinalProjectService.Controllers
 
         [HttpDelete]
         [Route("api/user/{userId}/cart/product/{productId}")]
-        public async Task<User> Delete(string userId, string productId)
+        public async Task<User> DeleteProductFromCartAsync(string userId, string productId)
         {
             var crud = new UserHandler();
 
@@ -115,6 +115,26 @@ namespace FinalProjectService.Controllers
             if (userFound != null && productFound != null)
             {
                 return await crud.RemoveProductFromCartAsync(userFound, productFound);
+            }
+            else
+            {
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+        }
+
+        [HttpDelete]
+        [Route("api/user/{userId}/cart/product/")]
+        public async Task<User> DeleteAllProductsFromCartAsync(string userId)
+        {
+            var crud = new UserHandler();
+
+            var user = crud.ReadAsync<User>("user", ObjectId.Parse(userId));
+
+            var userFound = await user;
+
+            if (userFound != null)
+            {
+                return await crud.PurchaseAllItemsInCart(userFound);
             }
             else
             {

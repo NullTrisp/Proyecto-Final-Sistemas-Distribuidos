@@ -35,6 +35,22 @@ namespace FinalProjectService.Controllers
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             }
         }
+        [HttpGet]
+        [Route("api/product/user/{userId}")]
+        public async Task<List<Product>> GetAllUserProducts(string userId)
+        {
+            var crud = new ProductHandler();
+
+            var productFounds = await crud.ReadAllAsync(ObjectId.Parse(userId));
+            if (productFounds != null)
+            {
+                return productFounds;
+            }
+            else
+            {
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+        }
 
 
         [Route("api/product/user/{userId}")]
