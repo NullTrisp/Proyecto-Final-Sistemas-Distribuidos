@@ -10,7 +10,9 @@ namespace FinalProjectService.Models
         string description { get; set; }
         int stock { get; set; }
         string category { get; set; }
-        string seller { get; set; } 
+        string seller { get; set; }
+
+        string image { get; set; }
 
         ObjectId userId { get; set; }
     }
@@ -23,6 +25,7 @@ namespace FinalProjectService.Models
         public int stock { get; set; }
         public string seller { get; set; }
         public string category { get; set; }
+        public string image { get; set; }
         public ObjectId userId { get; set; }
 
     }
@@ -63,6 +66,7 @@ namespace FinalProjectService.Models
             this.userId = product.userId;
             this.seller = product.seller;
             this.category = product.category;
+            this.image = product.image;
         }
     }
 }
