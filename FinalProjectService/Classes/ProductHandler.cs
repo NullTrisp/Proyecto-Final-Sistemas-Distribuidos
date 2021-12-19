@@ -21,6 +21,7 @@ namespace FinalProjectService.Classes
                 .Set(rec => rec.name, record.name)
                 .Set(rec => rec.stock, record.stock)
                 .Set(rec => rec.price, record.price)
+                .Set(rec => rec.image, record.image)
                 .Set(rec => rec.category, record.category);
 
             await collection.FindOneAndUpdateAsync(filter(await ReadAsync<Product>("product", id)), updateDefinition);

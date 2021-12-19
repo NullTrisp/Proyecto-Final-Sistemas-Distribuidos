@@ -66,11 +66,17 @@ namespace FinalProjectService.Controllers
         public async Task Put(string productId, [FromBody] ProductRequest product)
         {
             var crud = new ProductHandler();
-            var productFound = await crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
+            var productIdParsed = ObjectId.Parse(productId);
+            var productFound = await crud.ReadAsync<Product>("product", productIdParsed);
 
             if (productFound != null)
             {
                 await crud.UpdateAsync(productFound.id, new Product(product));
+                var productUpdated = await crud.ReadAsync<Product>("product", productIdParsed);
+                if(productUpdated.stock == 0)
+                {
+                    await DeleteProductFromAllCarts(new UserHandler(), productUpdated);
+                }
             }
             else
             {
@@ -87,15 +93,21 @@ namespace FinalProjectService.Controllers
             if (productFound != null)
             {
                 await crud.DeleteAsync<Product>("product", productFound.id);
-                var users = await crud.ReadAllAsync<User>("user");
 
-                var tasks = users.Where(user => user.cart.Contains(productFound.id)).Select(user => crud.RemoveProductFromCartAsync(user, productFound));
-                await Task.WhenAll(tasks);
+                await DeleteProductFromAllCarts(crud, productFound);
             }
             else
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             }
+        }
+
+        private static async Task DeleteProductFromAllCarts(UserHandler crud, Product product)
+        {
+            var users = await crud.ReadAllAsync<User>("user");
+
+            var tasks = users.Where(user => user.cart.Contains(product.id)).Select(user => crud.RemoveProductFromCartAsync(user, product));
+            await Task.WhenAll(tasks);
         }
     }
 }
