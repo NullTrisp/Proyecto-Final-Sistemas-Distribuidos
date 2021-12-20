@@ -1,123 +1,72 @@
-﻿using FinalProjectService.Classes;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
-using Realms;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace FinalProjectService.Models
 {
     public interface IProduct
     {
-        string Name { get; set; }
-        decimal Price { get; set; }
-        string Description { get; set; }
-        int Stock { get; set; }
+        string name { get; set; }
+        decimal price { get; set; }
+        string description { get; set; }
+        int stock { get; set; }
+        string category { get; set; }
+        string seller { get; set; }
+
+        string image { get; set; }
+
+        ObjectId userId { get; set; }
     }
 
-    [BsonIgnoreExtraElements]
-    public class Product : RealmObject, IProduct
+    public class ProductRequest : IProduct
     {
-        public static readonly string collection = "product";
-        [PrimaryKey]
-        [Indexed]
-        public string Name
+        public string name { get; set; }
+        public decimal price { get; set; }
+        public string description { get; set; }
+        public int stock { get; set; }
+        public string seller { get; set; }
+        public string category { get; set; }
+        public string image { get; set; }
+        public ObjectId userId { get; set; }
+
+    }
+
+    public class Product : IProduct
+    {
+        [BsonId]
+        public ObjectId id { get; set; } = ObjectId.GenerateNewId();
+
+        public string name
         {
             get; set;
         }
-        public decimal Price
+        public decimal price
         {
             get; set;
         }
-        [Required]
-        public string Description
+        public string description
         {
             get; set;
         }
-        public int Stock
+        public int stock
         {
             get; set;
         }
+        public string category { get; set; }
 
-        public static Product Create(IProduct product)
+        public ObjectId userId { get; set; }
+
+        public string image { get; set; } = "";
+        public string seller { get; set; }
+        public Product(IProduct product)
         {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-
-            mongoCollection.InsertOne(new Product()
-            {
-                Name = product.Name,
-                Description = product.Description,
-                Stock = product.Stock,
-                Price = product.Price
-            });
-
-            return Read(product.Name);
-        }
-
-        public static Product Read(string productName)
-        {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-            var filter = Builders<Product>.Filter.Eq("Name", productName);
-            var documentFound = mongoCollection.Find(filter).FirstOrDefault();
-
-            if (documentFound != null)
-            {
-                return new Product()
-                {
-                    Name = documentFound.Name,
-                    Description = documentFound.Description,
-                    Price = documentFound.Price,
-                    Stock = documentFound.Stock
-                };
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static IEnumerable<Product> ReadAll()
-        {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-
-            return mongoCollection.Find(_ => true).ToList().ToArray()
-                .Select(el => new Product()
-                {
-                    Name = el.Name,
-                    Description = el.Description,
-                    Stock = el.Stock,
-                    Price = el.Price
-                });
-        }
-
-        public Product Update(IProduct product)
-        {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-            var filter = Builders<Product>.Filter.Eq("Name", this.Name);
-            var updateDefinition = Builders<Product>.Update.Set(rec => rec.Description, product.Description);
-            var productFound = mongoCollection.FindOneAndUpdate<Product>(filter, updateDefinition, new FindOneAndUpdateOptions<Product>
-            {
-                ReturnDocument = ReturnDocument.After
-            });
-
-            if (productFound != null)
-            {
-                return productFound;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public void Delete()
-        {
-            var mongoCollection = DbHandler.GetCollection<Product>("localhost:27017", "amazon", collection);
-            var filter = Builders<Product>.Filter.Eq("Name", this.Name);
-            mongoCollection.FindOneAndDelete<Product>(filter);
+            this.name = product.name;
+            this.description = product.description;
+            this.stock = product.stock;
+            this.price = product.price;
+            this.userId = product.userId;
+            this.seller = product.seller;
+            this.category = product.category;
+            this.image = product.image;
         }
     }
 }
