@@ -92,6 +92,8 @@ namespace FinalProjectService.Controllers
             var productFound = await crud.ReadAsync<Product>("product", ObjectId.Parse(productId));
             if (productFound != null)
             {
+                await ImagesHandler.DeleteProductImageAsync(productFound);
+
                 await crud.DeleteAsync<Product>("product", productFound.id);
 
                 await DeleteProductFromAllCarts(crud, productFound);
